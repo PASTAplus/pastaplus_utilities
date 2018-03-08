@@ -1,3 +1,3 @@
-# pastaplus_utilities
-PASTA utility scripts or resources
+# PASTAplus Utilities
+PASTA+ utility scripts or resources
 
