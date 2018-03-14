@@ -20,8 +20,8 @@ from lxml import etree
 import requests
 import sys
 
-logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', 
+logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s', 
+                    datefmt='%Y-%m-%d %H:%M:%S%z',
                     # filename='offline_data' + '.log',
                     level=logging.INFO)
 
@@ -85,7 +85,10 @@ def package_id_to_path(package_id=None):
     return package_id.replace('.', '/')
 
 
-def get_resource_dict(package_id, resource_id, object_name=None, medium_name=None):
+def get_resource_dict(package_id, 
+                      resource_id, 
+                      object_name=None, 
+                      medium_name=None):
     """
     Derives a resource_dict dictionary from the supplied package ID,
     resource ID, and offline XML values
@@ -98,7 +101,10 @@ def get_resource_dict(package_id, resource_id, object_name=None, medium_name=Non
     return resource_dict
 
 
-def scan_for_offline(base_url=None, fp=sys.stdout, scopes=None, black_list=None):
+def scan_for_offline(base_url=None, 
+                     fp=sys.stdout, 
+                     scopes=None, 
+                     black_list=None):
     """
     Scans data packages for offline entities
     """
@@ -122,9 +128,13 @@ def scan_for_offline(base_url=None, fp=sys.stdout, scopes=None, black_list=None)
                     elem = tree.find('//distribution/offline/mediumName')
                     if elem is not None:
                         medium_name = elem.text
-                        object_name_elem = tree.find('//distribution/offline/../../objectName')
+                        object_name_elem = \
+                        tree.find('//distribution/offline/../../objectName')
                         object_name = object_name_elem.text
-                        rdict = get_resource_dict(package_id, metadata_url, object_name, medium_name)
+                        rdict = get_resource_dict(package_id, 
+                                                  metadata_url, 
+                                                  object_name, 
+                                                  medium_name)
                         offline.append(rdict)
          
                 except Exception as e:
@@ -144,13 +154,17 @@ def main():
     Reports on PASTA data packages with offline data entities.
 
     Usage:
-        offline_data.py [-u | --url <url>]  [-s | --scope <scope>]  [-o | --output <output>]
+        offline_data.py [-u | --url <url>]  
+                        [-s | --scope <scope>]  
+                        [-o | --output <output>]
         offline_data.py -h | --help
 
     Options:
-        -u --url      Base URL of PASTA services, e.g. 'https://pasta.lternet.edu'
+        -u --url      Base URL of PASTA services, 
+                      e.g. 'https://pasta.lternet.edu'
         -s --scope    Restrict to given scope
-        -o --output   Output results to file; the filename should have a .json extension
+        -o --output   Output results to file; 
+                      the filename should have a .json extension
         -h --help     This page
 
     """
@@ -176,7 +190,10 @@ def main():
     else:
         fp = open(output, 'w')
 
-    scan_for_offline(base_url=BASE_URL, fp=fp, scopes=scopes, black_list=black_list)
+    scan_for_offline(base_url=BASE_URL, 
+                     fp=fp, 
+                     scopes=scopes, 
+                     black_list=black_list)
 
     if (output):
         fp.close()

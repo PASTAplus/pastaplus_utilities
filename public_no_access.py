@@ -141,7 +141,6 @@ def has_public_read_access(acl_xml=None):
     an entry for public read access
     """
     has_public_read = False
-    xpath = '//allow'
     try:
         root = ET.fromstring(acl_xml)
         for child in root:
@@ -149,9 +148,11 @@ def has_public_read_access(acl_xml=None):
             has_permission_read = False
             if child.tag == 'allow':
                 for grandchild in child:
-                    if grandchild.tag == 'principal' and grandchild.text == 'public':
+                    if grandchild.tag == 'principal' and \
+                       grandchild.text == 'public':
                         has_principal_public = True
-                    if grandchild.tag == 'permission' and grandchild.text == 'read':
+                    if grandchild.tag == 'permission' and \
+                       grandchild.text == 'read':
                         has_permission_read = True
                 if has_principal_public and has_permission_read:
                     has_public_read = True         
@@ -205,7 +206,7 @@ def authenticate(base_url=None, creds=None):
     if (creds):
         dn, pw = tuple(creds.split(':'))
         url = base_url + service
-        r = requests.get(url, auth=(dn,pw))
+        r = requests.get(url, auth=(dn, pw))
         auth_token = r.cookies['auth-token']
         cookies = {'auth-token' : auth_token}
         return cookies
@@ -230,14 +231,19 @@ def main(argv):
     Reports on PASTA metadata and data resources that lack public read access.
 
     Usage:
-        public_no_access_report.py [-u | --url <url>]  [-c | --creds <creds>]  [-s | --scope <scope>]  [-o | --output <output>]
+        public_no_access_report.py [-u | --url <url>] 
+                                   [-c | --creds <creds>]  
+                                   [-s | --scope <scope>]  
+                                   [-o | --output <output>]
         public_no_access_report.py -h | --help
 
     Options:
-        -u --url      Base URL of PASTA services, e.g. 'https://pasta.lternet.edu'
+        -u --url      Base URL of PASTA services, 
+                      e.g. 'https://pasta.lternet.edu'
         -c --creds    Authentication credentials
         -s --scope    Restrict to given scope
-        -o --output   Output results to file; the filename should have a .json extension
+        -o --output   Output results to file; 
+                      the filename should have a .json extension
         -h --help     This page
 
     """
@@ -288,14 +294,16 @@ def main(argv):
                 logger.info("Working on package ID: " + id)
                 path = package_id_to_path(id)
                 # Get the resource map, if we have read access to it
-                resource_map = get_resource_map(base_url=BASE_URL, 
-                                                path=path, 
+                resource_map = get_resource_map(base_url=BASE_URL,
+                                                path=path,
                                                 cookies=my_cookies)
                 metadata_resource = parse_metadata_resource(resource_map)
                 metadata_acl_xml = ""
                 
                 try:
-                    metadata_acl_xml = get_metadata_acl(base_url=BASE_URL, path=path, cookies=my_cookies)
+                    metadata_acl_xml = get_metadata_acl(base_url=BASE_URL, 
+                                                        path=path, 
+                                                        cookies=my_cookies)
                     if has_public_read_access(metadata_acl_xml):
                         # Get the data resources from the resource map
                         data_resources = parse_data_resources(resource_map)
@@ -304,21 +312,29 @@ def main(argv):
                             entity_path = path + '/' + entity_id
                             try:
                                 data_acl_xml = get_data_acl(base_url=BASE_URL,
-                                                            path=entity_path, 
+                                                            path=entity_path,
                                                             cookies=my_cookies)
                                 if not has_public_read_access(data_acl_xml):
-                                    rdict = get_resource_dict(id, data_resource, data_acl_xml)
+                                    rdict = get_resource_dict(id, 
+                                                              data_resource, 
+                                                              data_acl_xml)
                                     non_public_data.append(rdict)
                             except Exception as e:
                                 logger.error(e)
-                                rdict = get_resource_dict(id, data_resource, data_acl_xml)
+                                rdict = get_resource_dict(id, 
+                                                          data_resource, 
+                                                          data_acl_xml)
                                 non_public_data.append(rdict)
                     else:
-                        rdict = get_resource_dict(id, metadata_resource, metadata_acl_xml)
+                        rdict = get_resource_dict(id, 
+                                                  metadata_resource, 
+                                                  metadata_acl_xml)
                         non_public_metadata.append(rdict)
                 except Exception as e:
                     logger.error(e)
-                    rdict = get_resource_dict(id, metadata_resource, metadata_acl_xml)
+                    rdict = get_resource_dict(id, 
+                                              metadata_resource, 
+                                              metadata_acl_xml)
                     non_public_metadata.append(rdict)
             
     non_public_resources = {}
