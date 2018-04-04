@@ -71,7 +71,7 @@ class FormatStringFormatter(NodeVisitor):
         return r'(\d\d\d\d)'
     
     def visit_month(self, node, visited_children):
-        return r'([01|02|03|04|05|06|07|08|09|10|11|12])'
+        return r'(01|02|03|04|05|06|07|08|09|10|11|12)'
     
     def visit_yearMonth(self, node, visited_children):
         return ''.join(visited_children)
@@ -89,7 +89,7 @@ class FormatStringFormatter(NodeVisitor):
         return node.text
     
     def visit_hours(self, node, visited_children):
-        return r'([0-1]\d)|2[0-4])'
+        return r'([0-1]\d|2[0-4])'
     
     def visit_minutes(self, node, visited_children):
         return r'([0-5]\d)'
@@ -98,7 +98,7 @@ class FormatStringFormatter(NodeVisitor):
         return r'([0-5]\d)'
     
     def visit_fractionalSeconds(self, node, visited_children):
-        return r'.\d\d\d)'
+        return r'(\.\d\d\d)'
     
     def visit_secondsWithFraction(self, node, visited_children):
         return ''.join(visited_children)
