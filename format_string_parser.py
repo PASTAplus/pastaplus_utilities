@@ -29,7 +29,7 @@ class FormatStringFormatter(NodeVisitor):
     """Visitor that turns a parse tree into a regular expression"""
 
     def visit_validDateTime(self, node, visited_children):
-        return ''.join(visited_children)
+        return '^' + ''.join(visited_children) + '$'
 
     def visit_monthBasedDateTime(self, node, visited_children):
         return ''.join(visited_children)
