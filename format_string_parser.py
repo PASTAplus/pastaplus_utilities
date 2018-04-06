@@ -211,10 +211,12 @@ def main():
         fin.close()
 
     for line in format_strings:
-        format_string = line.strip()
+        stripped_line = line.strip()
+        line_parts = stripped_line.split(',')
+        format_string = line_parts[0]
         logger.info("Parsing %s" % format_string)
         regex_result = format_string_visitor(format_string)
-        output_line = "%s,%s\n" % (format_string, regex_result)
+        output_line = "%s,%s\n" % (stripped_line, regex_result)
         fout.write(output_line)
 
     if (output):
