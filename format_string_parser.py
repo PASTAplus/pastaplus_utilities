@@ -67,6 +67,9 @@ class FormatStringFormatter(NodeVisitor):
     def visit_time(self, node, visited_children):
         return ''.join(visited_children)
     
+    def visit_timeZ(self, node, visited_children):
+        return ''.join(visited_children)
+    
     def visit_year(self, node, visited_children):
         return r'(\d\d\d\d)'
     
@@ -132,7 +135,7 @@ def format_string_visitor(format_string):
     grammar = Grammar(
     """
     validDateTime = monthBasedDateTime / dayBasedDateTime / monthBasedDate \
-                    / dayBasedDate / yearMonth / year
+                    / dayBasedDate / yearMonth / year / timeZ
     monthBasedDateTime = monthBasedDate T time Z
     dayBasedDateTime = dayBasedDate T time Z
     monthBasedDate = year dateDash month dateDash dayOfMonth
@@ -146,6 +149,7 @@ def format_string_visitor(format_string):
     time = timeWithOffset / timeNoOffset / timeNoSecondsWithOffset / \
            timeNoSecondsNoOffset / timeNoMinutesWithOffset / \
            timeNoMinutesNoOffset
+    timeZ = time Z
     year = "YYYY"
     month = "MM"
     yearMonth = year dateDash month
