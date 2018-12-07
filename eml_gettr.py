@@ -24,13 +24,13 @@ import requests
 daiquiri.setup(level=logging.INFO,
                outputs=(
                    'stderr',
-                ))
+               ))
 logger = daiquiri.getLogger('eml_gettr: ' + __name__)
 
 
-def get_pids(env: str, count: int) -> list:
+def get_pids(env: str, count: int, fq: str) -> list:
     solr_url = f'{env}/search/eml?defType=edismax&q=*&' + \
-               f'fq=-scope:ecotrends&fq=-scope:lter-landsat*&fl=packageid&' + \
+               f'{fq}fl=packageid&' + \
                f'&debug=false&rows={count}&sort=packageid,asc'
 
     r = requests.get(solr_url)
@@ -60,6 +60,8 @@ def get_eml(pid: str, env: str) -> str:
 
 env_help = 'PASTA+ environment to query: production, staging, development'
 count_help = 'Number of EML documents to return'
+include_help = 'Include scope'
+exclude_help = 'Exclude scope(s)'
 verbose_help = 'Display event information'
 
 
@@ -67,9 +69,11 @@ verbose_help = 'Display event information'
 @click.argument('eml_dir')
 @click.option('-e', '--env', default='production', help=env_help)
 @click.option('-c', '--count', default=10000, help=count_help)
+@click.option('-i', '--include', default='', help=include_help)
+@click.option('-e', '--exclude', multiple=True, help=exclude_help)
 @click.option('-v', '--verbose', is_flag=True, help=verbose_help)
-def main(eml_dir: str, env: str, count: int, verbose: bool = False):
-
+def main(eml_dir: str, env: str, count: int, include: tuple, exclude: tuple,
+         verbose: bool):
     if not os.path.isdir(eml_dir):
         logger.error(f'EML directory "{eml_dir}" does not exist')
         exit(1)
@@ -83,16 +87,22 @@ def main(eml_dir: str, env: str, count: int, verbose: bool = False):
         pasta = 'https://pasta-d.lternet.edu/package'
     else:
         logger.error(f'PASTA environment "{env}" not recognized')
+        exit(1)
 
-    pids = get_pids(pasta, count)
+    # Create include/exclude filter query for scope values
+    fq = ''
+    if include != '': fq = f'fq=scope:{include}&'
+    fq += ''.join(['fq=-scope:' + _.strip() + '&' for _ in exclude])
+
+    pids = get_pids(pasta, count, fq)
     npids = len(pids)
     n = 1
     for pid in pids:
-        percent = int(n/npids * 100)
-        msg = f'Downloading {pid}: {n}/{npids-n} ({percent}%) - '
+        percent = int(n / npids * 100)
+        msg = f'Downloading {pid}: {n}/{npids - n} ({percent}%) - '
         eml = get_eml(pid, pasta)
         if eml is not None:
-            with open(f'{eml_dir+pid}.xml', 'w') as f:
+            with open(f'{eml_dir + pid}.xml', 'w') as f:
                 msg += f'writing'
                 f.write(eml)
         else:
