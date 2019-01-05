@@ -18,6 +18,7 @@ import click
 import daiquiri
 from lxml import etree
 import requests
+import pendulum
 
 daiquiri.setup(level=logging.INFO,
                outputs=(
@@ -25,11 +26,61 @@ daiquiri.setup(level=logging.INFO,
                ))
 logger = daiquiri.getLogger('package_tracker: ' + __name__)
 
+INDENT = ' ' * 4
+
+
+def cn_report(resources: list, d1_url: str) -> str:
+    report = f'D1 CN ({d1_url}) objects and replica verify times:\n'
+    for resource in resources:
+        success, response = get_d1_sysmeta(resource, d1_url)
+        if success:
+            date_verified = get_d1_date_replica_verified(response)
+            report += f'{INDENT}{resource} - {date_verified}\n'
+        else:
+            report += f'{INDENT}{resource} - {response}\n'
+    report += f'D1 CN ({d1_url}) science metadata indexed:\n'
+    for resource in resources:
+        if 'metadata/eml' in resource:
+            success, response = get_d1_solr_result(resource, d1_url)
+            if success:
+                solr_count = get_d1_solr_count(response)
+                if solr_count >= 1:
+                    report += f'{INDENT}{resource} is indexed'
+                else:
+                    report += f'{INDENT}{resource} is NOT indexed'
+    return report
+
 
 def get_d1_date_uploaded(sysmeta_xml: str) -> str:
     root = etree.fromstring(sysmeta_xml.encode('utf-8'))
     date_uploaded = root.find('.//dateUploaded')
     return date_uploaded.text
+
+
+def get_d1_date_replica_verified(sysmeta_xml: str) -> str:
+    root = etree.fromstring(sysmeta_xml.encode('utf-8'))
+    date_verified = root.find('.//replicaVerified')
+    return date_verified.text
+
+
+def get_d1_solr_count(solr_xml: str) -> int:
+    root = etree.fromstring(solr_xml.encode('utf-8'))
+    result = root.find('.//result')
+    return int(result.get('numFound'))
+
+
+def get_d1_solr_result(pid: str, d1_url: str) -> tuple:
+    pid = quote(f'"{pid}"', safe='')
+    url = f'{d1_url}/query/solr/?start=0&rows=10&fl=id%2Ctitle%2CformatId&q=id%3A{pid}'
+    r = requests.get(url)
+    if r.status_code == requests.codes.ok:
+        return True, r.text
+    elif r.status_code == requests.codes.not_found:
+        return False, 'Not Found'
+    elif r.status_code == requests.codes.unauthorized:
+        return False, 'Unauthorized'
+    else:
+        return False, f'Unknown error with status code: {r.status_code}'
 
 
 def get_d1_sysmeta(pid: str, d1_url: str) -> tuple:
@@ -81,15 +132,34 @@ def get_resources(pid: list, pasta_url: str, auth: tuple) -> tuple:
         return False, f'Unknown error with status code: {r.status_code}'
 
 
-def pasta_report(pid: str, resources: list, date_created: str) -> str:
-    indent = ' ' * 4
+def gmn_report(resources: list, gmn_url: str) -> str:
+    report = f'D1 GMN ({gmn_url}) objects and upload times:\n'
+    for resource in resources:
+        success, response = get_d1_sysmeta(resource, gmn_url)
+        if success:
+            date_uploaded = pendulum.parse(get_d1_date_uploaded(response))
+            date_uploaded_str = date_uploaded.to_iso8601_string()
+            report += f'    {resource} - {date_uploaded_str}\n'
+        else:
+            report += f'    {resource} - {response}\n'
+    return report
+
+
+def pasta_report(pid: str, resources: list, date_created_raw: str) -> str:
+    utc = pendulum.timezone('UTC')
+    date_created_mt = pendulum.parse(date_created_raw, tz='America/Denver')
+    date_created_utc = pendulum.instance(utc.convert(date_created_mt))
+    date_created__utc_str = date_created_utc.to_iso8601_string()
+    dc_mt = date_created_mt.to_iso8601_string()
+    dc_utc = pendulum.parse(date_created__utc_str).to_iso8601_string()
+
     pid = '.'.join(pid)
     report = f'Package Identifier: {pid}\n'
-    report += f'Status: created {date_created}\n'
+    report += f'Created: {dc_mt} - {dc_utc}\n'
     report += f'DOI: {resources[-1]}\n'
     report += f'Resources:\n'
     for resource in resources[:-1]:
-        report += f'{indent}{resource}\n'
+        report += f'{INDENT}{resource}\n'
     return report
 
 
@@ -131,7 +201,7 @@ def track(pid: str, env: str, auth: str):
         _ = auth.split(':')
         auth = (_[0], _[1])
 
-    report = f'**** PASTA Data Package Provenance Report ****\n'
+    report = f'**** PASTA Data Package Report ****\n'
 
     success, response = get_resources(pid, pasta_url, auth)
     if success:
@@ -140,24 +210,8 @@ def track(pid: str, env: str, auth: str):
         resource_metadata = get_resource_metadata(pid, pasta_url, auth)
         date_created = get_resource_create_date(resource_metadata)
         report += pasta_report(pid, resources, date_created)
-        report += f'D1 GMN: {gmn_url}\n'
-        report += f'GMN objects and upload time:\n'
-        for resource in resources:
-            success, response = get_d1_sysmeta(resource, gmn_url)
-            if success:
-                date_uploaded = get_d1_date_uploaded(response)
-                report += f'    {resource} - {date_uploaded}\n'
-            else:
-                report += f'    {resource} - {response}\n'
-        report += f'D1 CN: {d1_url}\n'
-        report += f'CN objects and upload time:'
-        for resource in resources:
-            success, response = get_d1_sysmeta(resource, d1_url)
-            if success:
-                date_uploaded = get_d1_date_uploaded(response)
-                report += f'    {resource} - {date_uploaded}\n'
-            else:
-                report += f'    {resource} - {response}\n'
+        report += gmn_report(resources, gmn_url)
+        report += cn_report(resources, d1_url)
     else:
         pid = '.'.join(pid)
         report += f'Package Identifier: {pid}\n'
