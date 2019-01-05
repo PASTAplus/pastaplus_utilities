@@ -34,7 +34,8 @@ def cn_report(resources: list, d1_url: str) -> str:
     for resource in resources:
         success, response = get_d1_sysmeta(resource, d1_url)
         if success:
-            date_verified = get_d1_date_replica_verified(response)
+            dt_utc = pendulum.parse(get_d1_date_replica_verified(response))
+            date_verified = dt_utc.to_iso8601_string()
             report += f'{INDENT}{resource} - {date_verified}\n'
         else:
             report += f'{INDENT}{resource} - {response}\n'
@@ -137,25 +138,25 @@ def gmn_report(resources: list, gmn_url: str) -> str:
     for resource in resources:
         success, response = get_d1_sysmeta(resource, gmn_url)
         if success:
-            date_uploaded = pendulum.parse(get_d1_date_uploaded(response))
-            date_uploaded_str = date_uploaded.to_iso8601_string()
-            report += f'    {resource} - {date_uploaded_str}\n'
+            dt_utc = pendulum.parse(get_d1_date_uploaded(response))
+            date_uploaded = dt_utc.to_iso8601_string()
+            report += f'    {resource} - {date_uploaded}\n'
         else:
             report += f'    {resource} - {response}\n'
     return report
 
 
 def pasta_report(pid: str, resources: list, date_created_raw: str) -> str:
-    utc = pendulum.timezone('UTC')
-    date_created_mt = pendulum.parse(date_created_raw, tz='America/Denver')
-    date_created_utc = pendulum.instance(utc.convert(date_created_mt))
-    date_created__utc_str = date_created_utc.to_iso8601_string()
-    dc_mt = date_created_mt.to_iso8601_string()
-    dc_utc = pendulum.parse(date_created__utc_str).to_iso8601_string()
+    local_tz = 'America/Denver'
+    utc_tz = pendulum.timezone('UTC')
+    dt_mt = pendulum.parse(date_created_raw, tz=local_tz)
+    dt_utc = pendulum.instance(utc_tz.convert(dt_mt))
+    date_created_mt = dt_mt.to_iso8601_string()
+    date_created_utc = pendulum.parse(dt_utc.to_iso8601_string()).to_iso8601_string()
 
     pid = '.'.join(pid)
     report = f'Package Identifier: {pid}\n'
-    report += f'Created: {dc_mt} - {dc_utc}\n'
+    report += f'Created: {date_created_utc} ({date_created_mt} - {local_tz})\n'
     report += f'DOI: {resources[-1]}\n'
     report += f'Resources:\n'
     for resource in resources[:-1]:
