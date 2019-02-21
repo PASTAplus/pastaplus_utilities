@@ -102,7 +102,7 @@ def main(eml_dir: str, env: str, count: int, include: tuple, exclude: tuple,
         msg = f'Downloading {pid}: {n}/{npids - n} ({percent}%) - '
         eml = get_eml(pid, pasta)
         if eml is not None:
-            with open(f'{eml_dir + pid}.xml', 'w') as f:
+            with open(f'{eml_dir}/{pid}.xml', 'w') as f:
                 msg += f'writing'
                 f.write(eml)
         else:
