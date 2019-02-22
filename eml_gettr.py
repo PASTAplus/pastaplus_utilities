@@ -5,7 +5,7 @@
 
 :Synopsis:
     Download EML from packages specified by Solr query to local directory
-    usage: eml_gettr.py --verbose --count=1 --block_size=10 -env=production /tmp/eml
+    usage: eml_gettr.py --verbose --count=1 --block_size=10 --env=production /tmp/eml
 
 :Author:
     servilla
@@ -75,7 +75,7 @@ async def get_block(pids: list, pasta: str, e_dir: str, verbose: bool):
             file_path = f'{e_dir}/{pid}.xml'
             with open(file_path, 'w') as f:
                 f.write(eml)
-                msg = f'Writing: {file_path}.xml'
+                msg = f'Writing: {file_path}'
                 if verbose:
                     click.echo(msg)
         except (ClientError, IOError):
