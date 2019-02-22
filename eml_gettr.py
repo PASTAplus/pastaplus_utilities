@@ -18,7 +18,7 @@
 """
 import asyncio
 import logging
-import os
+from pathlib import Path
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
@@ -100,7 +100,7 @@ block_size_help = 'Number of concurrent requests to PASTA'
 @click.option('-b', '--block_size', default=5, help=block_size_help)
 def main(e_dir: str, env: str, count: int, include: tuple, exclude: tuple,
          verbose: bool, block_size: int):
-    if not os.path.isdir(e_dir):
+    if not Path(e_dir).is_dir():
         logger.error(f'Directory "{e_dir}" does not exist')
         exit(1)
 
