@@ -121,27 +121,33 @@ def scan_for_offline(base_url=None,
                 package_id = scope + '.' + identifier + '.' + revision
                 path = package_id_to_path(package_id)
                 metadata_url = base_url + '/package/metadata/eml/' + path
-
                 try:
-                    tree = etree.parse(metadata_url)
-                    
-                    elem = tree.find('//distribution/offline/mediumName')
-                    if elem is not None:
-                        medium_name = elem.text
-                        object_name_elem = \
-                        tree.find('//distribution/offline/../../objectName')
-                        object_name = object_name_elem.text
-                        rdict = get_resource_dict(package_id, 
-                                                  metadata_url, 
-                                                  object_name, 
-                                                  medium_name)
-                        offline.append(rdict)
-         
+                    r = requests.get(metadata_url)
+                    if r.status_code == requests.codes.ok:
+                        result_set = r.text.encode('utf-8')
+                        tree = etree.fromstring(result_set)
+                        phys = tree.findall('./dataset//physical')
+                        for phy in phys:
+                            distributions = phy.findall('.//distribution')
+                            for distribution in distributions:
+                                offline_elem = distribution.find('.//offline')
+                                if offline_elem is not None:
+                                    medium_elem = offline_elem.find('.//mediumName')
+                                    medium_name = medium_elem.text
+                                    object_name_elem = phy.find('.//objectName')
+                                    object_name = object_name_elem.text
+
+                                    rdict = get_resource_dict(package_id,
+                                                              metadata_url,
+                                                              object_name,
+                                                              medium_name)
+                                    offline.append(rdict)
+                    else:
+                        rdict = get_resource_dict(package_id, metadata_url, "", "")
+                        unparsed.append(rdict)
                 except Exception as e:
                     logger.error(e)
-                    rdict = get_resource_dict(package_id, metadata_url, "", "")
-                    unparsed.append(rdict)
-    
+
     scanned_resources = {}
     scanned_resources["offline"] = offline
     scanned_resources["unparsed"] = unparsed
