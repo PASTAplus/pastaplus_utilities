@@ -95,7 +95,7 @@ block_size_help = 'Number of concurrent requests to PASTA'
 @click.option('-e', '--env', default='production', help=env_help)
 @click.option('-c', '--count', default=10000, help=count_help)
 @click.option('-i', '--include', default='', help=include_help)
-@click.option('-e', '--exclude', multiple=True, help=exclude_help)
+@click.option('-x', '--exclude', multiple=True, help=exclude_help)
 @click.option('-v', '--verbose', is_flag=True, help=verbose_help)
 @click.option('-b', '--block_size', default=5, help=block_size_help)
 def main(e_dir: str, env: str, count: int, include: tuple, exclude: tuple,
