@@ -60,10 +60,7 @@ async def get_eml(pid: str, pasta: str) -> str:
     async with aiohttp.ClientSession() as session:
         async with session.get(eml_url) as resp:
             resp.raise_for_status()
-            try:
-                return await resp.text()
-            except Exception as e:
-                logger.error(e)
+            return await resp.text()
 
 
 async def get_block(pids: list, pasta: str, e_dir: str, verbose: bool):
@@ -81,8 +78,9 @@ async def get_block(pids: list, pasta: str, e_dir: str, verbose: bool):
                 msg = f'Writing: {file_path}'
                 if verbose:
                     click.echo(msg)
-        except (ClientError, IOError):
-            logger.error(f'Failed to access or write: {pid}')
+        except Exception as e:
+            msg = f'Failed to access or write: {pid}\n{e}'
+            logger.error(msg)
 
 
 env_help = 'PASTA+ environment to query: production, staging, development'
