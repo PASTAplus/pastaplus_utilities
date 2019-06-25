@@ -60,7 +60,10 @@ async def get_eml(pid: str, pasta: str) -> str:
     async with aiohttp.ClientSession() as session:
         async with session.get(eml_url) as resp:
             resp.raise_for_status()
-            return await resp.text()
+            try:
+                return await resp.text()
+            except Exception as e:
+                logger.error(e)
 
 
 async def get_block(pids: list, pasta: str, e_dir: str, verbose: bool):
