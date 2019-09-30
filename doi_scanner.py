@@ -58,7 +58,7 @@ def doi_scanner(p: str, o: str, s: str, d: str, r: str, x: str):
     main(p, o, s, d, r, x)
 
 
-BURST_SIZE = 10
+BURST_SIZE = 5
 MAX_RETRIES = 3
 TIME_TO_SLEEP = 1
 
