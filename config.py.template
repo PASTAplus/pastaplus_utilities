@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+DB_USER = 'pasta'
+DB_PW = 'SECRET_PASSWORD'
+DB_HOST = 'package.lternet.edu:5432'
+DB_DB = 'pasta'
+DB_DRIVER = 'postgres+psycopg2'
