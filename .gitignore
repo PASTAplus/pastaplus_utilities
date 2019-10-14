@@ -102,3 +102,6 @@ ENV/
 
 # IntelliJ IDE
 .idea
+
+# Project files
+config.py
