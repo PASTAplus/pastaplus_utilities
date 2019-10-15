@@ -50,7 +50,7 @@ def doi_scanner(d: str, r: str, x: str):
     main(d, r, x)
 
 
-ignored_scopes = ('lter-landsat', 'lter-landsat-ledaps', 'ecotrends')
+ignored_scopes = () #('lter-landsat', 'lter-landsat-ledaps', 'ecotrends')
 
 deep = False
 report_only = False
