@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+USERNAME = 'EDI.EDI'
+PASSWORD = 'SECRET_PASSWORD'
+DATACITE_DOMAIN = 'datacite.org'
+PICKLE_FILE = 'datacite.pkl'
+MODIFY_LANDING_PAGE_URLS = False  # So we don't accidentally modify URLs before we're ready
