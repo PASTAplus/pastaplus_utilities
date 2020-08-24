@@ -132,7 +132,7 @@ def main(
                 if m_file in results:
                     checksum = m_checksum.strip()
                     if checksum + "," != results[m_file]:
-                        results[m_file] = results[m_file] + checksum
+                        results[m_file] = results[m_file] + "fail"
                         msg = f"Checksum mismatch - {results[m_file]}"
                         logger.warning(msg)
                     else:
