@@ -16,5 +16,4 @@ dependencies:
   - daiquiri
   - black
   - parso
-  - ptpython
 prefix: /home/servilla/anaconda3/envs/p_utils
