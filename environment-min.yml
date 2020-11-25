@@ -1,0 +1,20 @@
+name: p_utils
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - psycopg2
+  - colorama
+  - docopt
+  - aiohttp
+  - click
+  - paramiko
+  - sqlalchemy
+  - python=3.8
+  - requests
+  - lxml
+  - daiquiri
+  - black
+  - parso
+  - ptpython
+prefix: /home/servilla/anaconda3/envs/p_utils
