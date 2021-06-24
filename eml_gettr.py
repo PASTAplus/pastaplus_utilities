@@ -22,7 +22,6 @@ from pathlib import Path
 import os
 
 import aiohttp
-from aiohttp.client_exceptions import ClientError
 import click
 import daiquiri
 from lxml import etree
@@ -91,9 +90,10 @@ include_help = 'Include scope'
 exclude_help = 'Exclude scope(s) e.g. -x scope_1 -x scpope_2 ...'
 verbose_help = 'Display event information'
 block_size_help = 'Number of concurrent requests to PASTA (default 5)'
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
-@click.command()
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('e_dir')
 @click.option('-e', '--env', default='production', help=env_help)
 @click.option('-c', '--count', default=10000, help=count_help)
@@ -120,7 +120,9 @@ def main(e_dir: str, env: str, count: int, include: tuple, exclude: tuple,
 
     # Create include/exclude filter query for scope values
     fq = ''
-    if include != '': fq = f'fq=scope:{include}&'
+    if include != '':
+        fq = f'fq=scope:{include}&'
+
     fq += ''.join(['fq=-scope:' + _.strip() + '&' for _ in exclude])
 
     pids = get_pids(pasta, count, fq)
