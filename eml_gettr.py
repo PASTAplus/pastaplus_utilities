@@ -19,6 +19,7 @@
 import asyncio
 import logging
 from pathlib import Path
+import os
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
@@ -27,11 +28,12 @@ import daiquiri
 from lxml import etree
 import requests
 
+
+cwd = os.path.dirname(os.path.realpath(__file__))
+logfile = cwd + "/eml_gettr.log"
 daiquiri.setup(level=logging.INFO,
-               outputs=(
-                   'stderr',
-               ))
-logger = daiquiri.getLogger('eml_gettr: ' + __name__)
+               outputs=(daiquiri.output.File(logfile), "stdout",))
+logger = daiquiri.getLogger(__name__)
 
 
 def get_pids(env: str, count: int, fq: str) -> list:
@@ -77,18 +79,18 @@ async def get_block(pids: list, pasta: str, e_dir: str, verbose: bool):
                 f.write(eml)
                 msg = f'Writing: {file_path}'
                 if verbose:
-                    click.echo(msg)
+                    logger.info(msg)
         except Exception as e:
             msg = f'Failed to access or write: {pid}\n{e}'
             logger.error(msg)
 
 
 env_help = 'PASTA+ environment to query: production, staging, development'
-count_help = 'Number of EML documents to return'
+count_help = 'Number of EML documents to return (default 10,000)'
 include_help = 'Include scope'
-exclude_help = 'Exclude scope(s)'
+exclude_help = 'Exclude scope(s) e.g. -x scope_1 -x scpope_2 ...'
 verbose_help = 'Display event information'
-block_size_help = 'Number of concurrent requests to PASTA'
+block_size_help = 'Number of concurrent requests to PASTA (default 5)'
 
 
 @click.command()
