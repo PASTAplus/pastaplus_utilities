@@ -15,5 +15,4 @@ dependencies:
   - lxml
   - daiquiri
   - black
-  - parso
 prefix: /home/servilla/anaconda3/envs/p_utils

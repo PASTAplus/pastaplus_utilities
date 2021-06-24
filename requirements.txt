@@ -1,46 +1,47 @@
-Package         Version  
---------------- ---------
-aiodns          1.2.0    
-aiohttp         3.6.1    
-asn1crypto      1.0.1    
-async-timeout   3.0.1    
-asyncio         3.4.3    
-attrs           19.2.0   
-bcrypt          3.1.7    
-cchardet        2.1.4    
-certifi         2019.9.11
-cffi            1.12.3   
-chardet         3.0.4    
-Click           7.0      
-colorama        0.4.1    
-cryptography    2.7      
-daiquiri        1.5.0    
-docopt          0.6.2    
-idna            2.8      
-jedi            0.14.0   
-lxml            4.4.1    
-multidict       4.5.2    
-paramiko        2.6.0    
-parso           0.5.0    
-pendulum        2.0.4    
-pip             19.2.3   
-prompt-toolkit  2.0.9    
-psycopg2        2.8.3    
-ptpython        2.0.4    
-pycares         2.4.0    
-pycparser       2.19     
-Pygments        2.4.2    
-PyNaCl          1.3.0    
-pyOpenSSL       19.0.0   
-PySocks         1.7.1    
-python-dateutil 2.7.5    
-pytzdata        2018.7   
-requests        2.22.0   
-setuptools      41.4.0   
-six             1.12.0   
-SQLAlchemy      1.3.9    
-typing          3.6.6    
-urllib3         1.24.2   
-wcwidth         0.1.7    
-wheel           0.33.6   
-yarl            1.3.0    
+aiohttp==3.7.4.post0
+appdirs==1.4.4
+async-timeout==3.0.1
+attrs==21.2.0
+backports.functools-lru-cache==1.6.4
+bcrypt==3.2.0
+black==21.5b2
+brotlipy==0.7.0
+certifi==2021.5.30
+cffi==1.14.5
+chardet==4.0.0
+click==8.0.1
+colorama==0.4.4
+cryptography==3.4.7
+daiquiri==3.0.0
+docopt==0.6.2
+greenlet==1.1.0
+idna==2.10
+jedi==0.18.0
+lxml==4.6.3
+multidict==5.1.0
+mypy-extensions==0.4.3
+paramiko==2.7.2
+parso==0.8.2
+pathspec==0.8.1
+pip==21.1.2
+prompt-toolkit==3.0.19
+psycopg2==2.9.1
+ptpython==3.0.17
+pycparser==2.20
+Pygments==2.9.0
+PyNaCl==1.4.0
+pyOpenSSL==20.0.1
+PySocks==1.7.1
+python-json-logger==2.0.1
+regex==2021.4.4
+requests==2.25.1
+setuptools==49.6.0.post20210108
+six==1.16.0
+SQLAlchemy==1.4.19
+toml==0.10.2
+typed-ast==1.4.3
+typing-extensions==3.10.0.0
+urllib3==1.26.5
+wcwidth==0.2.5
+wheel==0.36.2
+yarl==1.6.3
