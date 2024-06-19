@@ -9,8 +9,8 @@ dependencies:
   - aiohttp
   - click
   - paramiko
-  - sqlalchemy
-  - python=3.8
+  - sqlalchemy=1.4.49
+  - python=3.12
   - requests
   - lxml
   - daiquiri
