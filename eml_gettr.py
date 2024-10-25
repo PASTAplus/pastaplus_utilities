@@ -26,7 +26,7 @@ import click
 import daiquiri
 from lxml import etree
 import requests
-
+from sqlalchemy.testing.config import ident
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 logfile = cwd + "/eml_gettr.log"
@@ -34,23 +34,72 @@ daiquiri.setup(level=logging.INFO,
                outputs=(daiquiri.output.File(logfile), "stdout",))
 logger = daiquiri.getLogger(__name__)
 
+def get_pids_solr(env: str, count: int, include: tuple, exclude: tuple, verbose: bool) -> list:
+    """get_pids_solr
+    Returns only the most recent revisions of data packages for given scopes.
+    """
 
-def get_pids(env: str, count: int, fq: str) -> list:
+    # Create include/exclude filter query for scope values
+    fq = "".join(["fq=scope:" + _.strip() + "&" for _ in include])
+    if fq != "":
+        fq += "&"
+    fq += "".join(["fq=-scope:" + _.strip() + "&" for _ in exclude])
+
     solr_url = f'{env}/search/eml?defType=edismax&q=*&' + \
                f'{fq}fl=packageid&' + \
                f'&debug=false&rows={count}&sort=packageid,asc'
 
     r = requests.get(solr_url)
-    if r.status_code == requests.codes.ok:
-        result_set = r.text.encode('utf-8')
-    else:
-        raise requests.exceptions.ConnectionError()
-
+    r.raise_for_status()
+    result_set = r.text.encode('utf-8')
     root = etree.fromstring(result_set)
     _ = root.findall('.//packageid')
-    pids = list()
+    pids = []
     for pid in _:
         pids.append(pid.text)
+
+    return pids
+
+
+def get_pids_pasta(env: str, count: int, include: tuple, exclude: tuple, verbose: bool) -> list:
+    """get_pids_pasta
+    Return all revisions of data packages for given scopes.
+    """
+
+    include = set(include)
+    exclude = set(exclude)
+
+    # Get superset of scope values
+    scope_url = f"{env}/eml"
+    req = requests.get(scope_url)
+    req.raise_for_status()
+    scopes = set(req.text.split("\n"))
+
+    if len(include) != 0:
+        scopes = (scopes & include) - exclude
+    else:
+        scopes = scopes - exclude
+
+    c = 0
+    pids = []
+    for s in scopes:
+        identifier_url = f"{env}/eml/{s}"
+        req = requests.get(identifier_url)
+        req.raise_for_status()
+        identifiers = req.text.split("\n")
+        for i in identifiers:
+            revisions_url = f"{env}/eml/{include}/{i}"
+            req = requests.get(revisions_url)
+            req.raise_for_status()
+            revisions = req.text.split("\n")
+            for r in revisions:
+                c += 1
+                if c > count:
+                    return pids
+                pid = f"{include}.{i}.{r}"
+                if verbose:
+                    print(f"Adding pid: {pid}")
+                pids.append(pid)
 
     return pids
 
@@ -64,7 +113,7 @@ async def get_eml(pid: str, pasta: str) -> str:
             return await resp.text()
 
 
-async def get_block(pids: list, pasta: str, e_dir: str, verbose: bool):
+async def get_request_block(pids: list, pasta: str, e_dir: str, verbose: bool):
     tasks = []
 
     for pid in pids:
@@ -78,18 +127,19 @@ async def get_block(pids: list, pasta: str, e_dir: str, verbose: bool):
                 f.write(eml)
                 msg = f'Writing: {file_path}'
                 if verbose:
-                    logger.info(msg)
+                    print(msg)
         except Exception as e:
             msg = f'Failed to access or write: {pid}\n{e}'
             logger.error(msg)
 
 
-env_help = 'PASTA+ environment to query: production, staging, development'
-count_help = 'Number of EML documents to return (default 10,000)'
-include_help = 'Include scope'
-exclude_help = 'Exclude scope(s) e.g. -x scope_1 -x scpope_2 ...'
-verbose_help = 'Display event information'
-block_size_help = 'Number of concurrent requests to PASTA (default 5)'
+env_help = "PASTA+ environment to query: production (default), staging, development"
+count_help = "Number of EML documents to return (default 10,000)"
+all_help = "Include all revisions"
+include_help = "Include scope(s) e.g. -i scope_1 -i scope_2 ..."
+exclude_help = "Exclude scope(s) e.g. -x scope_1 -x scope_2 ..."
+verbose_help = "Display event information"
+request_size_help = "Number of concurrent requests to PASTA (default 5)"
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
@@ -97,12 +147,22 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 @click.argument('e_dir')
 @click.option('-e', '--env', default='production', help=env_help)
 @click.option('-c', '--count', default=10000, help=count_help)
-@click.option('-i', '--include', default='', help=include_help)
+@click.option('-a', '--all', is_flag=True, help=all_help)
+@click.option('-i', '--include', multiple=True, help=include_help)
 @click.option('-x', '--exclude', multiple=True, help=exclude_help)
 @click.option('-v', '--verbose', is_flag=True, help=verbose_help)
-@click.option('-b', '--block_size', default=5, help=block_size_help)
-def main(e_dir: str, env: str, count: int, include: tuple, exclude: tuple,
-         verbose: bool, block_size: int):
+@click.option('-r', '--request_size', default=5, help=request_size_help)
+def main(
+        e_dir: str,
+        env: str,
+        count: int,
+        all: bool,
+        include: tuple,
+        exclude: tuple,
+        verbose: bool,
+        request_size: int
+):
+
     if not Path(e_dir).is_dir():
         logger.error(f'Directory "{e_dir}" does not exist')
         exit(1)
@@ -118,23 +178,20 @@ def main(e_dir: str, env: str, count: int, include: tuple, exclude: tuple,
         logger.error(f'PASTA environment "{env}" not recognized')
         exit(1)
 
-    # Create include/exclude filter query for scope values
-    fq = ''
-    if include != '':
-        fq = f'fq=scope:{include}&'
-
-    fq += ''.join(['fq=-scope:' + _.strip() + '&' for _ in exclude])
-
-    pids = get_pids(pasta, count, fq)
+    if all:
+        pids = get_pids_pasta(pasta, count, include, exclude, verbose)
+    else:
+        pids = get_pids_solr(pasta, count, include, exclude, verbose)
 
     global loop
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-    # Execute N blocks of pids concurrently
-    i, j = 0, block_size
+    # Execute N requests of pids concurrently
+    i, j = 0, request_size
     while i < len(pids):
-        loop.run_until_complete(get_block(pids[i:j], pasta, e_dir, verbose))
-        i, j = j, j + block_size
+        loop.run_until_complete(get_request_block(pids[i:j], pasta, e_dir, verbose))
+        i, j = j, j + request_size
 
     return 0
 
