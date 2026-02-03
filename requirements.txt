@@ -27,7 +27,7 @@ mypy_extensions==1.1.0
 packaging==25.0
 paramiko==4.0.0
 pathspec==1.0.1
-pip==25.3
+pip==26.0
 platformdirs==4.5.1
 propcache==0.3.1
 psycopg2==2.9.11
